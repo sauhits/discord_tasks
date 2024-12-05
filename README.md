@@ -1,1 +1,3 @@
-a
+# discordbot を用いて課題の締め切りを通知する
+
+TOKEN:MTMxNDEzMTg5Nzk5MDkwNTkzOA.Gj61gh.uIiGfouXCZBIFmPRd9Spl140mXV91c1af13Q_o
