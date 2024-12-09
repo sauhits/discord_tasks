@@ -1,26 +1,34 @@
 import psycopg2
+from tabulate import tabulate as tab
 
-host = "localhost"
-dbname = "mytask"
+
+host = "ep-lucky-lake-a19d5syz.ap-southeast-1.pg.koyeb.app"
+dbname = "koyebdb"
 user = "taskuser"
-password = "kadai"
-port = "5433"
+password = "qc2agkMpsG0d"
+port = "5432"
 
 
-def showTasks(cursor):
-    sql = "SELECT * FROM task ORDER BY limit_date DESC"
-    cursor.execute(sql)
-    tables = cursor.fetchall()
-    return tables
+def showTasks(cxt):
+    try:
+        cursor=dbConnect()
+        sql = "SELECT * FROM mytask ORDER BY deadline DESC"
+        cursor.execute(sql)
+        tables = cursor.fetchall()
+        dbClose(cursor)
+        return tab(tables, headers=["ID", "タイトル", "期限"],tablefmt="simple")
+    except Exception as e:
+        print("エラー:", e)
+        return None
 
 
-def insertTask(cursor, name: str, limit_date: str):
-    sql = "INSERT INTO task(name,limit_date) VALUES(%s,%s)"
-    cursor.execute(sql, (name, limit_date))
+def insertTask(cursor, title: str, deadline: str):
+    sql = "INSERT INTO mytask(title,deadline) VALUES(%s,%s)"
+    cursor.execute(sql, (title, deadline))
 
 
 def deleteTask(cursor, id: int):
-    sql = "DELETE FROM task WHERE id = %s"
+    sql = "DELETE FROM mytask WHERE id = %s"
     cursor.execute(sql, id)
 
 
