@@ -30,8 +30,8 @@ async def exit(ctx):
 
 
 @bot.command()
-async def delete(ctx, id: int):
-    if databaseController.deleteTask(id):
+async def delete(ctx, id):
+    if databaseController.deleteTask(str(id)):
         await ctx.send(f"タスクID{id}を削除しました。")
     else:
         await ctx.send(f"タスクID{id}は存在しません。")
