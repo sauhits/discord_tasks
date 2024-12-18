@@ -14,12 +14,11 @@ bot = commands.Bot(command_prefix="!", case_insensitive=True, intents=intents)
 @bot.event
 async def onready():
     print("Bot is ready")
-    
 
 
 @bot.command()
 async def kadai(ctx):
-    table=databaseController.showTasks(ctx)
+    table = databaseController.showTasks(ctx)
     await ctx.send(table)
 
 
@@ -28,6 +27,14 @@ async def kadai(ctx):
 async def exit(ctx):
     await ctx.send("Goodbye!")
     await bot.close()
+
+
+@bot.command()
+async def delete(ctx, id):
+    if databaseController.deleteTask(str(id)):
+        await ctx.send(f"タスクID{id}を削除しました。")
+    else:
+        await ctx.send(f"タスクID{id}は存在しません。")
 
 
 bot.run(TOKEN)
