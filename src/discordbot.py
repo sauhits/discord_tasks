@@ -6,7 +6,7 @@ import os
 
 
 dotenv.load_dotenv()
-TOKEN = os.environ.get("Discord_TOKEN")
+TOKEN = os.environ.get("DISCORD_TOKEN")
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix="!", case_insensitive=True, intents=intents)
 
@@ -14,14 +14,16 @@ bot = commands.Bot(command_prefix="!", case_insensitive=True, intents=intents)
 @bot.event
 async def onready():
     print("Bot is ready")
-    
-
 
 @bot.command()
 async def kadai(ctx):
-    table=databaseController.showTasks(ctx)
+    table=databaseController.showTasks()
     await ctx.send(table)
 
+@bot.command()
+async def add(ctx, title: str, deadline: str):
+    databaseController.insertTask(str(title), str(deadline))
+    await ctx.send("タスクを追加しました。")
 
 # 退出
 @bot.command()

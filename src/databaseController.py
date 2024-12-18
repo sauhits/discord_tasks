@@ -9,7 +9,7 @@ password = "qc2agkMpsG0d"
 port = "5432"
 
 
-def showTasks(cxt):
+def showTasks():
     try:
         cursor=dbConnect()
         sql = "SELECT * FROM mytask ORDER BY deadline DESC"
@@ -22,9 +22,15 @@ def showTasks(cxt):
         return None
 
 
-def insertTask(cursor, title: str, deadline: str):
-    sql = "INSERT INTO mytask(title,deadline) VALUES(%s,%s)"
-    cursor.execute(sql, (title, deadline))
+def insertTask(title: str, deadline: str):
+    try:
+        cursor=dbConnect()
+        sql = "INSERT INTO mytask(title,deadline) VALUES(%s,%s)"
+        cursor.execute(sql, (title, deadline))
+        dbClose(cursor)
+    except Exception as e:
+        print("エラー:", e)
+        return None
 
 
 def deleteTask(cursor, id: int):
