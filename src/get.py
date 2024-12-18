@@ -12,71 +12,68 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import totp
 
-
 load_dotenv()
-url = "https://gakujo.shizuoka.ac.jp/lcu-web/"
+url = os.getenv("GAKUJO_URL")
 options = Options()
-# options.add_argument("--headless")
+options.add_argument("--headless")
 
 webdriver_service = Service(ChromeDriverManager().install())
 driver = webdriver.Chrome(service=webdriver_service, options=options)
 driver.get(url)
-wait = WebDriverWait(driver, 20)
+wait = WebDriverWait(driver, 30)
 
-# ログイン
-# 日本語選択
-select_element_locale = driver.find_element(By.ID, "selectLocale")
-select = Select(select_element_locale)
-select.select_by_value("ja")
+n = 1.2
 
-# ログイン
-login_button = driver.find_element(By.ID, "btnSsoStart")
-login_button.click()
+def getTaskList():
+    task_list = []
+    # ログイン
+    # 日本語選択
+    select_element_locale = driver.find_element(By.ID, "selectLocale")
+    Select(select_element_locale).select_by_value("ja")
+    wait.until(EC.element_to_be_clickable((By.ID, "btnSsoStart"))).click()
+    print("ログインページにアクセスしました。")
 
-# SSO認証
-SSO_username = wait.until(EC.presence_of_element_located((By.ID, "i0116")))
-
-SSO_username.send_keys(os.getenv("SSO_USERNAME"))
-to_password_page = driver.find_element(By.ID, "idSIButton9")
-to_password_page.click()
-
-
-SSO_password = wait.until(EC.presence_of_element_located((By.ID, "i0118")))
-SSO_password.send_keys(os.getenv("SSO_PASSWORD"))
-
-sleep(1)
-login_button = driver.find_element(By.ID, "idSIButton9")
-login_button.click()
-
-# 二要素認証
-sign_in_another_way_link = wait.until(
-    EC.element_to_be_clickable((By.ID, "signInAnotherWay"))
-)
-sign_in_another_way_link.click()
-verification_code_element = wait.until(
-    EC.presence_of_element_located(
-        (
-            By.XPATH,
-            "//div[@data-bind='text: display' and text()='Use a verification code']",
-        )
+    # SSO認証
+    sleep(n)
+    wait.until(EC.presence_of_element_located((By.ID, "i0116"))).send_keys(
+        os.getenv("SSO_USERNAME")
     )
-)
-verification_code_element.click()
+    wait.until(EC.element_to_be_clickable((By.ID, "idSIButton9"))).click()
+    sleep(n)
+    wait.until(EC.presence_of_element_located((By.ID, "i0118"))).send_keys(
+        os.getenv("SSO_PASSWORD")
+    )
+    wait.until(EC.element_to_be_clickable((By.ID, "idSIButton9"))).click()
+    print("SSO認証が完了しました。")
 
-# TOTP
-authenticator=wait.until(EC.presence_of_element_located((By.ID, "idTxtBx_SAOTCC_OTC")))
-totp_key=totp.get_totp_token(os.getenv("OTP_SEC_KEY"))
-authenticator.send_keys(totp_key)
-check_key=wait.until(EC.presence_of_element_located((By.ID, "idSubmit_SAOTCC_Continue")))
-check_key.click()
+    # TOTP
+    totp_key = totp.get_totp_token(os.getenv("OTP_SEC_KEY"))
+    sleep(n)
+    authenticator = wait.until(
+        EC.presence_of_element_located((By.ID, "idTxtBx_SAOTCC_OTC"))
+    )
+    authenticator.send_keys(totp_key)
+    wait.until(
+        EC.presence_of_element_located((By.ID, "idSubmit_SAOTCC_Continue"))
+    ).click()
+    sleep(n)
+    print("二要素認証が完了しました。")
 
-sleep(1)
-continue_button = wait.until(EC.element_to_be_clickable((By.ID, "idBtn_Back")))
-continue_button.click()
+    wait.until(EC.element_to_be_clickable((By.ID, "idBtn_Back"))).click()
+    wait.until(EC.element_to_be_clickable((By.NAME, "_eventId_proceed"))).click()
+    print("ログインが完了しました。")
 
-proceed_button = wait.until(EC.element_to_be_clickable((By.NAME, "_eventId_proceed")))
-proceed_button.click()
+    # 学情システム内
+    wait.until(
+        EC.element_to_be_clickable((By.ID, "templateMediumSizeContentsHref"))
+    ).click()
+    task_list = wait.until(
+        EC.presence_of_element_located((By.ID, "dataTable01"))
+    ).find_elements(By.TAG_NAME, "tr")
+    print("課題ページにアクセスしました。")
+    return task_list
 
-sleep(10000)
-# Quit the driver
-driver.quit()
+
+def close():
+    driver.quit()
+    print("ブラウザを閉じました。")
