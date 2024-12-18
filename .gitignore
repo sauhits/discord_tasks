@@ -4,3 +4,4 @@ google-chrome-stable_current_amd64.deb
 pass-otp/
 source.html
 task.csv
+src/__pycache__/
