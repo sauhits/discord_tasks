@@ -1,14 +1,41 @@
-import get
-import csv
+import re
 
-# list=get.getTaskList()
-# task_text=[]
-# for task in list:
-#     # print(task.text)
-#     task_text.append(task.text)
 
-task_text = [
-    "提出物種別\n講義名\n学期/曜日・時限\nタイトル\n状態\n提出期間\n提出状況",
-    "レポート 計算機アーキテクチャⅠ(1クラス)\n後期後半/水1・2, 後期前半/水1・2 計算機アーキテクチャIレポート（ハンドアセンブル） 受付中 2024/11/20 00:00 ～ 2024/12/25 17:00 未提出",
-    "レポート コンパイラ(1クラス)\n後期後半/水7・8, 後期前半/水7・8 第12回（12/18）お題 受付中 2024/12/18 08:00 ～ 2025/01/08 00:00 未提出",
-]
+# リストで渡した課題データを[[title,deadline]]の形式に変換する
+def taskFormatter(raw_text):
+    # ヘッダーの削除
+    raw_text.pop(0)
+    task_formatted = []
+    for task in raw_text:
+        # 半角，全角，タブを削除
+        task = re.sub(r"[\u3000 \t]", "", task)
+
+        # タイトルの取得をする．
+        title = re.search(r"^\S+\d+クラス", task)
+        if title:
+            title = title.group()
+            title = re.sub(
+                r"^(小テスト|レポート|授業アンケート|学内アンケート|授業評価アンケート)|\(\d+クラス$",
+                "",
+                title,
+            )
+        else:
+            print("タイトルが取得できませんでした")
+            continue
+
+        # 締切の取得をする
+        deadline = re.search(r"～\d{4}/\d{2}/\d{4}:\d{2}", task)
+        if deadline:
+            deadline = deadline.group()
+            deadDate = int(re.sub(r"～|/|\d{2}:\d{2}", "", deadline))
+        else:
+            print("締切が取得できませんでした")
+            continue
+
+        # 締切時間によって日時を変更する
+        deadTime = int(re.sub(r"～\d{4}/\d{2}/\d{2}|:", "", deadline))
+        if deadTime < 2300:
+            deadDate = deadDate - 1
+
+        task_formatted.append((title, deadDate))
+    return task_formatted

@@ -1,8 +1,7 @@
 from discord.ext import commands
-import discord
+import discord,dotenv,os
 import databaseController
-import dotenv
-import os
+import get,format
 
 
 dotenv.load_dotenv()
@@ -17,7 +16,18 @@ async def onready():
 
 @bot.command()
 async def kadai(ctx):
-    table=databaseController.showTasks()
+    # タスクを取得して整形
+    getTaskList = get.getTaskList()
+    task_text = [task.text for task in getTaskList]
+    task_table = format.taskFormatter(task_text)
+
+    # Markdown形式でテーブルを作成
+    table = "```\n"  # コードブロックで囲んで、テーブル形式に見せる
+    for row in task_table:
+        table += " | ".join([str(cell) for cell in row]) + "\n"  # 行を「 | 」で区切り、各セルを文字列として処理
+    table += "```"
+
+    # 表を送信
     await ctx.send(table)
 
 @bot.command()
