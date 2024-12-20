@@ -1,20 +1,21 @@
 from discord.ext import commands
-import discord,dotenv,os
+from dotenv import load_dotenv
+import discord,os
 import databaseController
 import get,format
 
 
-dotenv.load_dotenv()
+load_dotenv()
 TOKEN = os.environ.get("DISCORD_TOKEN")
 intents = discord.Intents.all()
-bot = commands.Bot(command_prefix="!", case_insensitive=True, intents=intents)
+client = discord.Client(intents=intents)
 
 
-@bot.event
-async def onready():
+@client.event
+async def on_ready():
     print("Bot is ready")
 
-@bot.command()
+@client.command()
 async def kadai(ctx):
     # タスクを取得して整形
     getTaskList = get.getTaskList()
