@@ -1,7 +1,6 @@
 from discord.ext import commands
 from dotenv import load_dotenv
 import discord,os
-import databaseController
 import get,format
 
 
@@ -15,8 +14,8 @@ client = discord.Client(intents=intents)
 async def on_ready():
     print("Bot is ready")
 
-@client.command()
-async def kadai(ctx):
+@client.event
+async def on_message(message):
     # タスクを取得して整形
     getTaskList = get.getTaskList()
     task_text = [task.text for task in getTaskList]
@@ -29,26 +28,8 @@ async def kadai(ctx):
     table += "```"
 
     # 表を送信
-    await ctx.send(table)
-
-@bot.command()
-async def add(ctx, title: str, deadline: str):
-    databaseController.insertTask(str(title), str(deadline))
-    await ctx.send("タスクを追加しました。")
-
-# 退出
-@bot.command()
-async def exit(ctx):
-    await ctx.send("Goodbye!")
-    await bot.close()
+    await message.channel.send(table)
 
 
-@bot.command()
-async def delete(ctx, id):
-    if databaseController.deleteTask(str(id)):
-        await ctx.send(f"タスクID{id}を削除しました。")
-    else:
-        await ctx.send(f"タスクID{id}は存在しません。")
 
-
-bot.run(TOKEN)
+client.run(TOKEN)
