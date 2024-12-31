@@ -5,3 +5,4 @@ pass-otp/
 source.html
 task.csv
 src/__pycache__/
+.env
