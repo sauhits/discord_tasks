@@ -34,7 +34,6 @@ async def tasks_view(interaction: interaction):
     getTaskList = get.getTaskList(URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY)
     task_text = [task.text for task in getTaskList]
     task_table = format.taskFormatter(task_text)
-
     # Markdown形式でテーブルを作成
     table = "```\n"  # コードブロックで囲んで、テーブル形式に見せる
     for row in task_table:
@@ -42,7 +41,6 @@ async def tasks_view(interaction: interaction):
             " | ".join([str(cell) for cell in row]) + "\n"
         )  # 行を「 | 」で区切り、各セルを文字列として処理
     table += "```"
-
     # 表を送信
     await interaction.followup.send(table)
 
