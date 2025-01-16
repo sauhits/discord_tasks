@@ -6,3 +6,5 @@ source.html
 task.csv
 src/__pycache__/
 .env
+*.json
+*.txt

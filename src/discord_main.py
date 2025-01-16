@@ -5,10 +5,10 @@ import get, format
 
 load_dotenv()
 
-SSO_USERNAME = os.environ.get("getSSO_USERNAME")
-SSO_PASSWORD = os.environ.get("getSSO_PASSWORD")
-OTP_SEC_KEY = os.environ.get("getOTP_SEC_KEY")
-URL = os.environ.get("getGAKUJO_URL")
+SSO_USERNAME = os.environ.get("SSO_USERNAME")
+SSO_PASSWORD = os.environ.get("SSO_PASSWORD")
+OTP_SEC_KEY = os.environ.get("OTP_SEC_KEY")
+URL = os.environ.get("GAKUJO_URL")
 TOKEN = os.environ.get("DISCORD_TOKEN")
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)

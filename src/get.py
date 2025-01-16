@@ -13,7 +13,7 @@ import totp
 n = 1.5
 
 
-def getTaskList(url, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
+def getTaskList(URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
     for _ in range(2):
         task_list = []
         global driver
@@ -24,7 +24,7 @@ def getTaskList(url, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
             webdriver_service = Service(ChromeDriverManager().install())
             driver = webdriver.Chrome(service=webdriver_service, options=options)
             wait = WebDriverWait(driver, 15)
-            driver.get(url)
+            driver.get(URL)
 
             select_element_locale = driver.find_element(By.ID, "selectLocale")
             Select(select_element_locale).select_by_value("ja")
