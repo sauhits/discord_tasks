@@ -29,14 +29,14 @@ def getTeamsTasks():
     global driver
     options = Options()
     # options.add_argument("--headless")
-    n = 0
+    n = 1
     try:
         webdriver_service = Service(ChromeDriverManager().install())
         for _ in range(5):
             try:
                 n = n * 0.5
                 driver = webdriver.Chrome(service=webdriver_service, options=options)
-                wait = setWebDriverWait(5)
+                wait = setWebDriverWait(10)
                 driver.get(URL)
                 # SSO認証
                 sleep(n)
@@ -68,14 +68,17 @@ def getTeamsTasks():
                 break
             except StaleElementReferenceException as sere:
                 print(sere)
+                n = n + 1
                 close()
                 pass
             except TimeoutException as te:
                 print(te)
+                n = n + 1
                 close()
                 pass
             except Exception as e:
                 print(e)
+                n = n + 1
                 close()
                 pass
 
@@ -94,9 +97,17 @@ def getTeamsTasks():
             assignment_menu.click()
             print("課題ページに遷移しました。")
             sleep(10)
+            # TODO: iframeの移動
+            wait.until(
+                EC.frame_to_be_available_and_switch_to_it(
+                    (By.ID, "cacheable-iframe:66aeee93-507d-479a-a3ef-8f494af43945")
+                )
+            )
+
             with open(tmp, "w", encoding="utf-8") as f:
                 f.write(driver.page_source)
             print("htmlを取得しました。")
+            driver.switch_to.default_content()
 
         except StaleElementReferenceException as sere:
             print(sere)
