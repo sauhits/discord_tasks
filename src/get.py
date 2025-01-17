@@ -40,16 +40,20 @@ def getTaskList(URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
             )
             wait.until(EC.element_to_be_clickable((By.ID, "idSIButton9"))).click()
             print("SSO認証が完了しました。")
-            # # TOTP
-            # totp_key = totp.get_totp_token(OTP_SEC_KEY)
-            # authenticator = wait.until(
-            #     EC.presence_of_element_located((By.ID, "idTxtBx_SAOTCC_OTC"))
-            # )
-            # authenticator.send_keys(totp_key)
-            # wait.until(
-            #     EC.presence_of_element_located((By.ID, "idSubmit_SAOTCC_Continue"))
-            # ).click()
-            # print("二要素認証が完了しました。")
+            # TOTP
+            if len(driver.find_elements(By.ID, "idTxtBx_SAOTCC_OTC")) > 0:
+                # totpの認証を行う
+                totp_key = totp.get_totp_token(OTP_SEC_KEY)
+                authenticator = wait.until(
+                    EC.presence_of_element_located((By.ID, "idTxtBx_SAOTCC_OTC"))
+                )
+                authenticator.send_keys(totp_key)
+                wait.until(
+                    EC.presence_of_element_located((By.ID, "idSubmit_SAOTCC_Continue"))
+                ).click()
+                print("二要素認証が完了しました。")
+            else:
+                print("二要素認証はスキップされました。")
             wait.until(EC.element_to_be_clickable((By.ID, "idBtn_Back"))).click()
             wait.until(
                 EC.element_to_be_clickable((By.NAME, "_eventId_proceed"))
