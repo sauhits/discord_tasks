@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import totp
+from time import sleep
 
 n = 1.5
 
@@ -41,6 +42,7 @@ def getTaskList(URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
             wait.until(EC.element_to_be_clickable((By.ID, "idSIButton9"))).click()
             print("SSO認証が完了しました。")
             # TOTP
+            sleep(2)
             if len(driver.find_elements(By.ID, "idTxtBx_SAOTCC_OTC")) > 0:
                 # totpの認証を行う
                 totp_key = totp.get_totp_token(OTP_SEC_KEY)
