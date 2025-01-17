@@ -20,6 +20,7 @@ URL = "https://teams.microsoft.com/"
 cookies_file = "cookies_teams.json"
 tmp = "html.txt"
 tmp1 = "tmp1.json"
+teams_shot = "teams_shot.png"
 SSO_USERNAME = os.environ.get("SSO_USERNAME")
 SSO_PASSWORD = os.environ.get("SSO_PASSWORD")
 OTP_SEC_KEY = os.environ.get("OTP_SEC_KEY")
@@ -29,12 +30,12 @@ def getTeamsTasks():
     global driver
     options = Options()
     # options.add_argument("--headless")
-    n = 1
+    n = 0.5
     try:
         webdriver_service = Service(ChromeDriverManager().install())
         for _ in range(5):
             try:
-                n = n * 0.5
+                n = n * 2
                 driver = webdriver.Chrome(service=webdriver_service, options=options)
                 wait = setWebDriverWait(10)
                 driver.get(URL)
@@ -52,15 +53,15 @@ def getTeamsTasks():
                 sleep(n)
                 print("SSO認証が完了しました。")
                 wait = setWebDriverWait(10)
-                # TOTP
-                totp_key = totp.get_totp_token(OTP_SEC_KEY)
-                authenticator = wait.until(
-                    EC.presence_of_element_located((By.ID, "idTxtBx_SAOTCC_OTC"))
-                )
-                authenticator.send_keys(totp_key)
-                wait.until(
-                    EC.presence_of_element_located((By.ID, "idSubmit_SAOTCC_Continue"))
-                ).click()
+                # # TOTP
+                # totp_key = totp.get_totp_token(OTP_SEC_KEY)
+                # authenticator = wait.until(
+                #     EC.presence_of_element_located((By.ID, "idTxtBx_SAOTCC_OTC"))
+                # )
+                # authenticator.send_keys(totp_key)
+                # wait.until(
+                #     EC.presence_of_element_located((By.ID, "idSubmit_SAOTCC_Continue"))
+                # ).click()
                 sleep(n)
                 print("二要素認証が完了しました。")
                 wait.until(EC.element_to_be_clickable((By.ID, "idBtn_Back"))).click()
@@ -107,6 +108,7 @@ def getTeamsTasks():
             with open(tmp, "w", encoding="utf-8") as f:
                 f.write(driver.page_source)
             print("htmlを取得しました。")
+            driver.save_screenshot(teams_shot)
             driver.switch_to.default_content()
 
         except StaleElementReferenceException as sere:
