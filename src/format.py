@@ -3,6 +3,7 @@ import re
 
 # リストで渡した課題データを[[title,deadline]]の形式に変換する
 def taskFormatter(raw_text):
+    print(raw_text)
     # ヘッダーの削除
     raw_text.pop(0)
     task_formatted = []
