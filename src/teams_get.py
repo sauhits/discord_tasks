@@ -15,107 +15,100 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 load_dotenv()
-standby_url = "https://teams.microsoft.com/l/meetup-join/19%3ameeting_Zjg3NjJiNDYtYjM0NC00OTYwLTk0MTItMDg3ZGI2Zjc0NGFj%40thread.v2/0?context=%7b%22Tid%22%3a%22e0d7dc00-4621-4fe0-90b1-df7b1b40b351%22%2c%22Oid%22%3a%2265647787-084e-4088-9b52-f9c758e5af0a%22%7d"
 URL = "https://teams.microsoft.com/"
 cookies_file = "cookies_teams.json"
-tmp = "html.txt"
-tmp1 = "tmp1.json"
-teams_shot = "teams_shot.png"
-SSO_USERNAME = os.environ.get("SSO_USERNAME")
-SSO_PASSWORD = os.environ.get("SSO_PASSWORD")
-OTP_SEC_KEY = os.environ.get("OTP_SEC_KEY")
 
 
-def getTeamsTasks():
+def getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
     global driver
     options = Options()
     # options.add_argument("--headless")
-    n = 0.5
-    try:
-        webdriver_service = Service(ChromeDriverManager().install())
-        for _ in range(5):
-            try:
-                n = n * 2
-                driver = webdriver.Chrome(service=webdriver_service, options=options)
-                wait = setWebDriverWait(10)
-                driver.get(URL)
-                # SSO認証
-                sleep(n)
-                wait.until(EC.presence_of_element_located((By.ID, "i0116"))).send_keys(
-                    SSO_USERNAME
-                )
-                wait.until(EC.element_to_be_clickable((By.ID, "idSIButton9"))).click()
-                sleep(n)
-                wait.until(EC.presence_of_element_located((By.ID, "i0118"))).send_keys(
-                    SSO_PASSWORD
-                )
-                wait.until(EC.element_to_be_clickable((By.ID, "idSIButton9"))).click()
-                sleep(n)
-                print("SSO認証が完了しました。")
-                wait = setWebDriverWait(10)
-                # # TOTP
-                # totp_key = totp.get_totp_token(OTP_SEC_KEY)
-                # authenticator = wait.until(
-                #     EC.presence_of_element_located((By.ID, "idTxtBx_SAOTCC_OTC"))
-                # )
-                # authenticator.send_keys(totp_key)
-                # wait.until(
-                #     EC.presence_of_element_located((By.ID, "idSubmit_SAOTCC_Continue"))
-                # ).click()
-                sleep(n)
-                print("二要素認証が完了しました。")
-                wait.until(EC.element_to_be_clickable((By.ID, "idBtn_Back"))).click()
-                print("ログイン完了")
-                break
-            except StaleElementReferenceException as sere:
-                print(sere)
-                n = n + 1
-                close()
-                pass
-            except TimeoutException as te:
-                print(te)
-                n = n + 1
-                close()
-                pass
-            except Exception as e:
-                print(e)
-                n = n + 1
-                close()
-                pass
-
+    n = 1
+    webdriver_service = Service(ChromeDriverManager().install())
+    for _ in range(5):
         try:
-            wait = setWebDriverWait(20)
+            driver = webdriver.Chrome(service=webdriver_service, options=options)
+            wait = setWebDriverWait(10)
+            driver.get(URL)
+            # SSO認証
             sleep(n)
-            assignment_menu = wait.until(
-                EC.element_to_be_clickable(
-                    (By.ID, "66aeee93-507d-479a-a3ef-8f494af43945")
-                )
+            wait.until(EC.presence_of_element_located((By.ID, "i0116"))).send_keys(
+                SSO_USERNAME
             )
-            print("cookie取得開始")
-            cookies = driver.get_cookies()
-            saveCookies(cookies_file, cookies)
-            # 課題ページに遷移
-            assignment_menu.click()
-            print("課題ページに遷移しました。")
-            sleep(10)
-            # TODO: iframeの移動
-            wait.until(
-                EC.frame_to_be_available_and_switch_to_it(
-                    (By.ID, "cacheable-iframe:66aeee93-507d-479a-a3ef-8f494af43945")
-                )
+            wait.until(EC.element_to_be_clickable((By.ID, "idSIButton9"))).click()
+            sleep(n)
+            wait.until(EC.presence_of_element_located((By.ID, "i0118"))).send_keys(
+                SSO_PASSWORD
             )
-
-            with open(tmp, "w", encoding="utf-8") as f:
-                f.write(driver.page_source)
-            print("htmlを取得しました。")
-            driver.save_screenshot(teams_shot)
-            driver.switch_to.default_content()
-
+            wait.until(EC.element_to_be_clickable((By.ID, "idSIButton9"))).click()
+            sleep(n)
+            print("SSO認証が完了しました。")
+            wait = setWebDriverWait(10)
+            sleep(1.5)
+            if len(driver.find_elements(By.ID, "idTxtBx_SAOTCC_OTC")) > 0:
+                # totpの認証を行う
+                totp_key = totp.get_totp_token(OTP_SEC_KEY)
+                authenticator = wait.until(
+                    EC.presence_of_element_located((By.ID, "idTxtBx_SAOTCC_OTC"))
+                )
+                authenticator.send_keys(totp_key)
+                wait.until(
+                    EC.presence_of_element_located((By.ID, "idSubmit_SAOTCC_Continue"))
+                ).click()
+                print("二要素認証が完了しました。")
+            else:
+                print("二要素認証はスキップされました。")
+            wait.until(EC.element_to_be_clickable((By.ID, "idBtn_Back"))).click()
+            print("ログイン完了")
+            break
         except StaleElementReferenceException as sere:
             print(sere)
+            n = n + 0.5
+            close()
+            pass
+        except TimeoutException as te:
+            print(te)
+            n = n + 0.5
+            close()
+            pass
+        except Exception as e:
+            print(e)
+            n = n + 0.5
+            close()
+            pass
 
-    finally:
-        driver.quit()
+    try:
+        wait = setWebDriverWait(20)
+        sleep(n)
+        assignment_menu = wait.until(
+            EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div/div/div/div[3]/div/div/div[1]/div[4]/div/button"))
+        )
+        # 課題ページに遷移
+        assignment_menu.click()
+        print("課題ページに遷移しました。")
+        n=5
+        # TODO: iframeの移動
+        sleep(n)
+        iframe=driver.find_element(By.XPATH, "/html/body/iframe")
+        driver.switch_to.frame(iframe)
+        print("iframeに移動しました。")
+        # sleep(n)
+        wait.until(
+            EC.presence_of_element_located(
+                (
+                    By.XPATH,
+                    "/html/body/div[1]/div/div[1]/main/div[2]/div/div[2]/div",
+                )
+            )
+        )
+        sleep(2)
+        task_list = driver.find_elements(
+            By.XPATH, "/html/body/div[1]/div/div[1]/main/div[2]/div/div[2]/div"
+        )
+        print(task_list)
+        return task_list
+    except StaleElementReferenceException as sere:
+        print(sere)
 
 
 def addCookies(driver, cookies, print_flag=False):
@@ -158,6 +151,3 @@ def close():
 def setWebDriverWait(time=10):
     wait = WebDriverWait(driver, time)
     return wait
-
-
-getTeamsTasks()
