@@ -97,8 +97,8 @@ def getTaskList(URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
         EC.presence_of_element_located((By.ID, "dataTable01"))
     ).find_elements(By.TAG_NAME, "tr")
     print("課題ページにアクセスしました。")
+    
     return task_list
-
 
 def close():
     driver.quit()
