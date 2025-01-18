@@ -2,6 +2,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import discord, os
 import get, format
+import datetime
 
 load_dotenv()
 
@@ -13,7 +14,6 @@ TOKEN = os.environ.get("DISCORD_TOKEN")
 intents = discord.Intents.all()
 client = discord.Client(intents=intents)
 tree = discord.app_commands.CommandTree(client)
-interaction = discord.Interaction
 
 
 @client.event
@@ -28,8 +28,21 @@ async def on_ready():
 
 
 @tree.command(name="tasks_view", description="課題一覧を表示します")
-async def tasks_view(interaction: interaction):
+async def tasks_view(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
+    log_space = "log_kadai"
+    threads = discord.utils.get(interaction.guild.threads, name=log_space)
+    if threads is None:
+        await interaction.followup.send(f"{log_space}が見つかりません")
+        return
+    async for message in threads.history(limit=20):
+        if message.author.name == "kadai":
+            send_time = message.created_at
+            time_now_utc = datetime.datetime.now(datetime.timezone.utc)
+            # logの期限を確認
+            if (time_now_utc - send_time).seconds < 86400:
+                await interaction.followup.send(message.content)
+                return
     # タスクを取得して整形
     getTaskList = get.getTaskList(URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY)
     task_text = [task.text for task in getTaskList]
@@ -42,6 +55,7 @@ async def tasks_view(interaction: interaction):
         )  # 行を「 | 」で区切り、各セルを文字列として処理
     table += "```"
     # 表を送信
+    await threads.send(table)
     await interaction.followup.send(table)
 
 
