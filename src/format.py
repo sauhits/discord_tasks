@@ -24,7 +24,6 @@ def taskFormatter(raw_text):
             continue
         # 締切の取得をする
         deadline = re.search(r"～(\d{4}/\d{2}/\d{2})(\d{2}:\d{2})", task)
-        print(deadline)
         if deadline:
             date_str, time_str = deadline.groups()
             deadDate = int(date_str.replace("/", ""))
@@ -35,5 +34,6 @@ def taskFormatter(raw_text):
         else:
             print("締切が取得できませんでした")
             continue
+        
         task_formatted.append((title, deadDate))
     return task_formatted
