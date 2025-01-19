@@ -1,7 +1,7 @@
 from discord.ext import commands
 from dotenv import load_dotenv
 import discord, os
-import get, format, teams_get
+import get, format, teams_get, teams_format
 import datetime
 
 load_dotenv()
@@ -62,10 +62,10 @@ async def tasks_view(interaction: discord.Interaction):
 @tree.command(name="teams_view", description="Teamsの課題一覧を表示します")
 async def teams_view(interaction: discord.Interaction):
     await interaction.response.defer(thinking=True)
-
     getTaskList = teams_get.getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY)
-    task_text = [task.text for task in getTaskList]
-    for task in task_text:
+    task_list = teams_format.taskFormatter(getTaskList)
+    print(task_list)
+    for task in task_list:
         await interaction.followup.send(task)
 
 
