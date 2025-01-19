@@ -81,15 +81,20 @@ def getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
         wait = setWebDriverWait(20)
         sleep(n)
         assignment_menu = wait.until(
-            EC.element_to_be_clickable((By.XPATH, "/html/body/div[1]/div/div/div/div[3]/div/div/div[1]/div[4]/div/button"))
+            EC.element_to_be_clickable(
+                (
+                    By.XPATH,
+                    "/html/body/div[1]/div/div/div/div[3]/div/div/div[1]/div[4]/div/button",
+                )
+            )
         )
         # 課題ページに遷移
         assignment_menu.click()
         print("課題ページに遷移しました。")
-        n=5
+        n = 5
         # TODO: iframeの移動
         sleep(n)
-        iframe=driver.find_element(By.XPATH, "/html/body/iframe")
+        iframe = driver.find_element(By.XPATH, "/html/body/iframe")
         driver.switch_to.frame(iframe)
         print("iframeに移動しました。")
         # sleep(n)
@@ -105,7 +110,7 @@ def getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
         task_list = driver.find_elements(
             By.XPATH, "/html/body/div[1]/div/div[1]/main/div[2]/div/div[2]/div"
         )
-        print(task_list)
+        task_list = [task.text for task in task_list]
         return task_list
     except StaleElementReferenceException as sere:
         print(sere)
