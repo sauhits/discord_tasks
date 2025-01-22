@@ -56,7 +56,7 @@ def deadTimeFormatter(deadtime: str):
     formatted_deadtime = ""
     if re.sub(r"^\d{2}:\d{2}", "", deadtime) == "PM":
         tmp = int(re.sub(r":", "", re.sub(r"[a-zA-Z]{2}$", "", deadtime))) + 1200
-        formatted_deadtime = str(tmp)[0:2] + ":" + str(tmp)[2:4]
+        formatted_deadtime = str(tmp)[0:2] + str(tmp)[2:4]
     else:
         formatted_deadtime = re.sub(r"[a-zA-Z]{2}$", "", deadtime)
     return formatted_deadtime
@@ -79,7 +79,4 @@ def deadLineFormatter(deadline: str):
     }
     month = month_map.get(re.match(r"^\w{3}", re.sub(r"\w{2}$", "", deadline)).group())
     day = re.sub(r"^\w{3}", "", re.sub(r"\w{2}$", "", deadline))
-    return month + "/" + day
-
-
-print(taskFormatter(test))
+    return month + day
