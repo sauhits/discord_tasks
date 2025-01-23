@@ -16,6 +16,23 @@ client = discord.Client(intents=intents)
 tree = discord.app_commands.CommandTree(client)
 
 
+def dateToInt(date: datetime) -> int:
+    year = str(date.year)
+    if date.month < 10:
+        month = "0" + str(date.month)
+    else:
+        month = str(date.month)
+    if date.day < 10:
+        day = "0" + str(date.day)
+    else:
+        day = str(date.day)
+    if date.hour < 10:
+        hour = "0" + str(date.hour)
+    else:
+        hour = str(date.hour)
+    return int(year + month + day + hour)
+
+
 @client.event
 async def on_ready():
     print("login ")
@@ -37,12 +54,14 @@ async def tasks_view(interaction: discord.Interaction):
         return
     async for message in threads.history(limit=20):
         if message.author.name == "kadai":
-            send_time = message.created_at
-            time_now_utc = datetime.datetime.now(datetime.timezone.utc)
+            send_time = dateToInt(message.created_at)
+            time_now_utc = dateToInt(datetime.datetime.now(datetime.timezone.utc))
             # logの期限を確認
-            if (time_now_utc - send_time).seconds < 86400:
+            if (time_now_utc - send_time) < 24:
                 await interaction.followup.send(message.content)
                 return
+    print("課題を取得します")
+    return
     # タスクを取得して整形
     getTaskList = get.getTaskList(URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY)
     task_text = [task.text for task in getTaskList]
