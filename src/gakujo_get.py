@@ -3,32 +3,34 @@ from webdriver_manager.chrome import ChromeDriverManager
 from selenium import webdriver
 from selenium.common.exceptions import TimeoutException, StaleElementReferenceException
 from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.select import Select
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import (
+    TimeoutException,
+    StaleElementReferenceException,
+    ElementNotInteractableException,
+)
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import totp
+import totp, os
 from time import sleep
-
-n = 1.5
-
+from dotenv import load_dotenv
 
 def getTaskList(URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
-    for _ in range(2):
+    for _ in range(3):
         task_list = []
-        global driver
-        options = Options()
+        global gakujo_driver
         # options.add_argument("--headless")
         # ログイン
         try:
             webdriver_service = Service(ChromeDriverManager().install())
-            driver = webdriver.Chrome(service=webdriver_service, options=options)
-            wait = WebDriverWait(driver, 15)
-            driver.get(URL)
+            options = Options()
+            gakujo_driver = webdriver.Chrome(service=webdriver_service, options=options)
+            wait = setWebDriverWait(10)
+            gakujo_driver.get(URL)
 
-            select_element_locale = driver.find_element(By.ID, "selectLocale")
-            Select(select_element_locale).select_by_value("ja")
+            # select_element_locale = gakujo_driver.find_element(By.ID, "selectLocale")
+            # Select(select_element_locale).select_by_value("ja")
             wait.until(EC.element_to_be_clickable((By.ID, "btnSsoStart"))).click()
             print("ログインページにアクセスしました。")
             # SSO認証
@@ -42,14 +44,21 @@ def getTaskList(URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
             wait.until(EC.element_to_be_clickable((By.ID, "idSIButton9"))).click()
             print("SSO認証が完了しました。")
             # TOTP
-            sleep(2)
-            if len(driver.find_elements(By.ID, "idTxtBx_SAOTCC_OTC")) > 0:
+
+            while True:
+                if len(gakujo_driver.find_elements(By.ID, "idTxtBx_SAOTCC_OTC")) > 0:
+                    break
+                elif len(gakujo_driver.find_elements(By.ID, "idBtn_Back")) > 0:
+                    break
+                else:
+                    sleep(0.5)
+                    wait.until(EC.presence_of_all_elements_located)
+            if len(gakujo_driver.find_elements(By.ID, "idTxtBx_SAOTCC_OTC")) > 0:
                 # totpの認証を行う
                 totp_key = totp.get_totp_token(OTP_SEC_KEY)
-                authenticator = wait.until(
+                wait.until(
                     EC.presence_of_element_located((By.ID, "idTxtBx_SAOTCC_OTC"))
-                )
-                authenticator.send_keys(totp_key)
+                ).send_keys(totp_key)
                 wait.until(
                     EC.presence_of_element_located((By.ID, "idSubmit_SAOTCC_Continue"))
                 ).click()
@@ -63,13 +72,17 @@ def getTaskList(URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
             print("ログインが完了しました。")
             break
         except TimeoutException as te:
-            print(te)
+            print(te.msg)
             close()
-            pass
+            continue
         except StaleElementReferenceException as se:
-            print(se)
+            print(se.msg)
             close()
-            pass
+            continue
+        except ElementNotInteractableException as en:
+            print(en.msg)
+            close()
+            continue
 
     # 学情システム内
     wait.until(
@@ -97,9 +110,24 @@ def getTaskList(URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
         EC.presence_of_element_located((By.ID, "dataTable01"))
     ).find_elements(By.TAG_NAME, "tr")
     print("課題ページにアクセスしました。")
-    
+
     return task_list
 
+
 def close():
-    driver.quit()
+    gakujo_driver.quit()
     print("ブラウザを閉じました。")
+
+
+def setWebDriverWait(time=10):
+    wait = WebDriverWait(gakujo_driver, time)
+    return wait
+
+
+# load_dotenv()
+# getTaskList(
+#     os.environ.get("GAKUJO_URL"),
+#     os.environ.get("SSO_USERNAME"),
+#     os.environ.get("SSO_PASSWORD"),
+#     os.environ.get("OTP_SEC_KEY"),
+# )
