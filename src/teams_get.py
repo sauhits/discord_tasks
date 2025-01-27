@@ -34,34 +34,40 @@ XPATH_LAST_ENTER = "/html/body/div/form/div/div/div[2]/div[1]/div/div/div/div/di
 XPATH_ASSIGNMENT_PAGE = (
     "/html/body/div[1]/div/div/div/div[3]/div/div/div[1]/div[4]/div/button"
 )
-XPATH_TEAMS_IFRAME = "/html/body/iframe"
+XPATH_TEAMS_IFRAME = "/html/body/div[1]/div/div/div/div[7]/div/div/div/div/div/iframe"
 XPATH_TEAMS_ASSIGNMENT = "/html/body/div[1]/div/div[1]/main/div[2]/div/div[2]/div"
 
 
 def getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
-    global driver
-    driver = None
+    global teams_driver
+    teams_driver = None
     options = Options()
     # options.add_argument("--headless")
     webdriver_service = Service(ChromeDriverManager().install())
     check = False
-    
+
     while True:
-        if driver is None:
-            driver = webdriver.Chrome(service=webdriver_service, options=options)
+        if teams_driver is None:
+            teams_driver = webdriver.Chrome(service=webdriver_service, options=options)
             wait = setWebDriverWait(10)
-            driver.get(URL)
+            teams_driver.get(URL)
         try:
             wait.until(EC.presence_of_all_elements_located)
             # SSO_USERNAMEの入力
-            if len(driver.find_elements(By.XPATH, XPATH_SSO_USERNAME)) > 0 and check == False:
+            if (
+                len(teams_driver.find_elements(By.XPATH, XPATH_SSO_USERNAME)) > 0
+                and check == False
+            ):
                 print("SSO_USERNAMEの入力")
                 wait.until(
                     EC.presence_of_element_located((By.XPATH, XPATH_SSO_USERNAME))
                 ).send_keys(SSO_USERNAME)
                 check = True
             # SSO_PASSWORDの入力
-            elif len(driver.find_elements(By.XPATH, XPATH_SSO_PASSWORD)) > 0 and check==False:
+            elif (
+                len(teams_driver.find_elements(By.XPATH, XPATH_SSO_PASSWORD)) > 0
+                and check == False
+            ):
                 print("SSO_PASSWORDの入力")
                 wait.until(
                     EC.presence_of_element_located((By.XPATH, XPATH_SSO_PASSWORD))
@@ -69,7 +75,7 @@ def getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
                 check = True
             # SSO_USERNAMEのENTER
             elif (
-                len(driver.find_elements(By.XPATH, XPATH_SSO_NAME_ENTER)) > 0 and check
+                len(teams_driver.find_elements(By.XPATH, XPATH_SSO_NAME_ENTER)) > 0 and check
             ):
                 print("SSO_USERNAMEのENTER")
                 check = False
@@ -79,14 +85,14 @@ def getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
                 sleep(0.5)
             # SSO_PASSWORDのENTER
             elif (
-                len(driver.find_elements(By.XPATH, XPATH_SSO_PASS_ENTER)) > 0 and check
+                len(teams_driver.find_elements(By.XPATH, XPATH_SSO_PASS_ENTER)) > 0 and check
             ):
                 print("SSO_PASSWORDのENTER")
                 wait.until(
                     EC.element_to_be_clickable((By.XPATH, XPATH_SSO_PASS_ENTER))
                 ).click()
             # TOTP
-            elif len(driver.find_elements(By.XPATH, XPATH_AUTHCODE)) > 0:
+            elif len(teams_driver.find_elements(By.XPATH, XPATH_AUTHCODE)) > 0:
                 print("TOTPの入力")
                 # totpの認証を行う
                 totp_key = totp.get_totp_token(OTP_SEC_KEY)
@@ -97,11 +103,11 @@ def getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
                     EC.presence_of_element_located((By.XPATH, XPATH_AUTHCODE_ENTER))
                 ).click()
                 sleep(1)
-                if len(driver.find_elements(By.XPATH, XPATH_AUTHCODE)) > 0:
+                if len(teams_driver.find_elements(By.XPATH, XPATH_AUTHCODE)) > 0:
                     close()
                     continue
             # 認証全体の完了
-            elif len(driver.find_elements(By.XPATH, XPATH_LAST_ENTER)) > 0 and check:
+            elif len(teams_driver.find_elements(By.XPATH, XPATH_LAST_ENTER)) > 0 and check:
                 wait.until(
                     EC.element_to_be_clickable((By.XPATH, XPATH_LAST_ENTER))
                 ).click()
@@ -131,22 +137,15 @@ def getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
             ).click()
             print("課題ページに遷移しました。")
             # iframeの移動
-            wait.until(EC.presence_of_element_located((By.XPATH, "/html/body/div[1]/div/div/div/div[7]/div/div/div/div/div/iframe")))
-            iframe = driver.find_element(By.XPATH, "/html/body/div[1]/div/div/div/div[7]/div/div/div/div/div/iframe")
-            driver.switch_to.frame(iframe)
+            wait.until(EC.presence_of_element_located((By.XPATH, XPATH_TEAMS_IFRAME)))
+            iframe = teams_driver.find_element(By.XPATH, XPATH_TEAMS_IFRAME)
+            teams_driver.switch_to.frame(iframe)
             print("iframeに移動しました。")
             # 課題の取得
             wait.until(
-                EC.presence_of_element_located(
-                    (
-                        By.XPATH,
-                        "/html/body/div[1]/div/div[1]/main/div[2]/div/div[2]/div",
-                    )
-                )
+                EC.presence_of_element_located((By.XPATH, XPATH_TEAMS_ASSIGNMENT))
             )
-            task_list = driver.find_elements(
-                By.XPATH, "/html/body/div[1]/div/div[1]/main/div[2]/div/div[2]/div"
-            )
+            task_list = teams_driver.find_elements(By.XPATH, XPATH_TEAMS_ASSIGNMENT)
             print("課題の取得完了")
             task_list = [task.text for task in task_list]
             if task_list is None:
@@ -179,15 +178,15 @@ def addCookies(driver, cookies, print_flag=False):
 
 
 def close():
-    driver.quit()
+    teams_driver.quit()
     print("ブラウザを閉じました。")
 
 
 def setWebDriverWait(time=10):
-    wait = WebDriverWait(driver, time)
+    wait = WebDriverWait(teams_driver, time)
     return wait
 
 
-getTeamsTasks(
-    os.getenv("SSO_USERNAME"), os.getenv("SSO_PASSWORD"), os.getenv("OTP_SEC_KEY")
-)
+# getTeamsTasks(
+#     os.getenv("SSO_USERNAME"), os.getenv("SSO_PASSWORD"), os.getenv("OTP_SEC_KEY")
+# )
