@@ -1,7 +1,7 @@
 from discord.ext import commands
 from dotenv import load_dotenv
-import discord, os
-import get, format, teams_get, teams_format
+import discord, os, copy
+import gakujo_get, gakujo_format, teams_get, teams_format,sort
 import datetime
 
 load_dotenv()
@@ -60,32 +60,33 @@ async def tasks_view(interaction: discord.Interaction):
             if (time_now_utc - send_time) < 24:
                 await interaction.followup.send(message.content)
                 return
-    print("課題を取得します")
-    return
+
     # タスクを取得して整形
-    getTaskList = get.getTaskList(URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY)
-    task_text = [task.text for task in getTaskList]
-    task_table = format.taskFormatter(task_text)
+    getGakujoTasks = gakujo_get.getTaskList(
+        URL, SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY
+    )
+    gakujo_tasks = copy.deepcopy(gakujo_format.taskFormatter(getGakujoTasks))
+    gakujo_get.close()
+    await interaction.followup.send("学情の課題を取得しました")
+    getTeamsTasks = teams_get.getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY)
+    teams_tasks = copy.deepcopy(teams_format.taskFormatter(getTeamsTasks))
+    teams_get.close()
+    await interaction.followup.send("Teamsの課題を取得しました")
+    task_all = gakujo_tasks + teams_tasks
+    print(task_all)
+    task_all = sort.sort(task_all)
+    print(task_all)
     # Markdown形式でテーブルを作成
     table = "```\n"  # コードブロックで囲んで、テーブル形式に見せる
-    for row in task_table:
-        table += (
-            " | ".join([str(cell) for cell in row]) + "\n"
-        )  # 行を「 | 」で区切り、各セルを文字列として処理
+    table += "| 期限      | 課題名       \n"  # ヘッダー行
+    table += "|----------|--------------\n"  # ヘッダーの区切り線
+    for row in task_all:
+        task_parts = row.split('.')
+        table += f"| {task_parts[0]} | {task_parts[1]} \n"  # 「.」で分割してテーブルの行を作成
     table += "```"
     # 表を送信
     await threads.send(table)
     await interaction.followup.send(table)
 
 
-@tree.command(name="teams_view", description="Teamsの課題一覧を表示します")
-async def teams_view(interaction: discord.Interaction):
-    await interaction.response.defer(thinking=True)
-    getTaskList = teams_get.getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY)
-    task_list = teams_format.taskFormatter(getTaskList)
-    print(task_list)
-    for task in task_list:
-        await interaction.followup.send(task)
-
-
-client.run(TOKEN)
+client.run(TOKEN,reconnect=True)
