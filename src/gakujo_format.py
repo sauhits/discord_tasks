@@ -9,8 +9,10 @@ test = [
     "レポート ディジタル信号処理(1クラス)\n後期前半/月5・6, 後期後半/月5・6 最終レポート 受付中 2025/01/26 16:30 ～ 2025/02/09 23:55 未提出",
 ]
 
+
 # リストで渡した課題データを[(title, deadline)]の形式に変換する
 def taskFormatter(raw_text: list):
+    raw_text = [task.text for task in raw_text]
     # ヘッダーを削除
     raw_text.pop(0)
     task_formatted = []
@@ -18,7 +20,7 @@ def taskFormatter(raw_text: list):
     for task in raw_text:
         # 半角，全角，タブを削除
         task = re.sub(r"[\u3000 \t]", "", task)
-        
+
         # タイトルの取得
         title_match = re.match(r"^[^\n]+", task)
         if title_match:
@@ -41,7 +43,7 @@ def taskFormatter(raw_text: list):
             month_day = date_str[5:].replace("/", "")
             time_str = time_str.replace(":", "")
             deadline_time = int(time_str)
-            
+
             # 時刻が23時未満の場合、締切日を前日に変更
             if deadline_time < 2300:
                 day = int(month_day[2:]) - 1
@@ -51,10 +53,10 @@ def taskFormatter(raw_text: list):
             continue
 
         # 結果をリストに追加
-        task_formatted.append((title, f"{month_day} {time_str}"))
-    
+        task_formatted.append((f"{month_day}{time_str}", title))
+
     return task_formatted
 
-# フォーマットを実行して確認
-formatted_tasks = taskFormatter(test)
-print(formatted_tasks)
+
+# formatted_tasks = taskFormatter(test)
+# print(formatted_tasks)
