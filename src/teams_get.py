@@ -20,7 +20,6 @@ from selenium.webdriver.support import expected_conditions as EC
 
 load_dotenv()
 URL = "https://teams.microsoft.com/"
-cookies_file = "cookies_teams.json"
 
 XPATH_SSO_USERNAME = "/html/body/div/form[1]/div/div/div[2]/div[1]/div/div/div/div/div[1]/div[3]/div/div/div/div[2]/div[2]/div/input[1]"
 XPATH_SSO_PASSWORD = "/html/body/div/form[1]/div/div/div[2]/div[1]/div/div/div/div/div/div[3]/div/div[2]/div/div[3]/div/div[2]/input"
@@ -40,52 +39,55 @@ XPATH_TEAMS_ASSIGNMENT = "/html/body/div[1]/div/div[1]/main/div[2]/div/div[2]/di
 
 def getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
     global teams_driver
-    teams_driver = None
     options = Options()
     # options.add_argument("--headless")
     webdriver_service = Service(ChromeDriverManager().install())
-    check = False
-
+    teams_name_check = False
+    teams_pass_check = False
+    teams_driver = webdriver.Chrome(service=webdriver_service, options=options)
+    wait = setWebDriverWait(10)
+    teams_driver.get(URL)
     while True:
         if teams_driver is None:
             teams_driver = webdriver.Chrome(service=webdriver_service, options=options)
-            wait = setWebDriverWait(10)
             teams_driver.get(URL)
         try:
             wait.until(EC.presence_of_all_elements_located)
+            sleep(0.2)
             # SSO_USERNAMEの入力
             if (
                 len(teams_driver.find_elements(By.XPATH, XPATH_SSO_USERNAME)) > 0
-                and check == False
+                and teams_name_check == False
             ):
                 print("SSO_USERNAMEの入力")
                 wait.until(
                     EC.presence_of_element_located((By.XPATH, XPATH_SSO_USERNAME))
                 ).send_keys(SSO_USERNAME)
-                check = True
+                teams_name_check = True
             # SSO_PASSWORDの入力
             elif (
                 len(teams_driver.find_elements(By.XPATH, XPATH_SSO_PASSWORD)) > 0
-                and check == False
+                and teams_pass_check == False
             ):
                 print("SSO_PASSWORDの入力")
                 wait.until(
                     EC.presence_of_element_located((By.XPATH, XPATH_SSO_PASSWORD))
                 ).send_keys(SSO_PASSWORD)
-                check = True
+                teams_pass_check = True
             # SSO_USERNAMEのENTER
             elif (
-                len(teams_driver.find_elements(By.XPATH, XPATH_SSO_NAME_ENTER)) > 0 and check
+                len(teams_driver.find_elements(By.XPATH, XPATH_SSO_NAME_ENTER)) > 0
+                and teams_name_check == True
             ):
                 print("SSO_USERNAMEのENTER")
-                check = False
                 wait.until(
                     EC.element_to_be_clickable((By.XPATH, XPATH_SSO_NAME_ENTER))
                 ).click()
                 sleep(0.5)
             # SSO_PASSWORDのENTER
             elif (
-                len(teams_driver.find_elements(By.XPATH, XPATH_SSO_PASS_ENTER)) > 0 and check
+                len(teams_driver.find_elements(By.XPATH, XPATH_SSO_PASS_ENTER)) > 0
+                and teams_pass_check == True
             ):
                 print("SSO_PASSWORDのENTER")
                 wait.until(
@@ -107,14 +109,17 @@ def getTeamsTasks(SSO_USERNAME, SSO_PASSWORD, OTP_SEC_KEY):
                     close()
                     continue
             # 認証全体の完了
-            elif len(teams_driver.find_elements(By.XPATH, XPATH_LAST_ENTER)) > 0 and check:
+            elif (
+                len(teams_driver.find_elements(By.XPATH, XPATH_LAST_ENTER)) > 0
+                and teams_name_check
+            ):
                 wait.until(
                     EC.element_to_be_clickable((By.XPATH, XPATH_LAST_ENTER))
                 ).click()
                 print("ログイン完了")
                 break
             else:
-                continue
+                wait.until(EC.presence_of_all_elements_located)
         except StaleElementReferenceException as sere:
             print(sere.msg)
             continue
